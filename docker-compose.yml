@@ -20,6 +20,8 @@ services:
     environment:
       PORT: 3000
       # The pg library reads these PG* variables automatically.
+      JWT_SECRET: ${JWT_SECRET}
+
       PGHOST: postgres
       PGPORT: 5432
       PGUSER: ${POSTGRES_USER}
