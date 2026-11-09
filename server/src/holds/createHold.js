@@ -45,7 +45,9 @@ JOIN hotels ho     ON ho.id = rt.hotel_id`;
 function toHoldView(row) {
   return {
     holdId: row.id,
-    status: row.status,
+    // expires_at decides, not the worker: between expiry and the next worker tick the row
+    // still says 'active', but the hold is already dead.
+    status: row.status === 'active' && row.seconds_left === 0 ? 'expired' : row.status,
     expiresAt: row.expires_at,
     secondsLeft: row.status === 'active' ? row.seconds_left : 0,
     hotel: { id: row.hotel_id, name: row.hotel_name },
