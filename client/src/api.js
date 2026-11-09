@@ -12,6 +12,7 @@ export class ApiError extends Error {
     super(body?.error ?? body?.errors?.[0]?.message ?? `Request failed (${status})`);
     this.status = status;
     this.fieldErrors = fieldErrors;
+    this.body = body; // extra fields some errors carry, e.g. { reason, bookingId }
   }
 }
 

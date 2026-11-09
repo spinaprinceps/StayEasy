@@ -11,6 +11,8 @@
   --warn: #a4520a;
   --error: #b42318;
   --error-soft: #fdecea;
+  --success: #1d7a3e;
+  --success-soft: #e6f4ea;
   --radius: 10px;
 
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -34,6 +36,8 @@
     --warn: #f0a35c;
     --error: #f2847a;
     --error-soft: #3a1d1b;
+    --success: #6fd394;
+    --success-soft: #16301f;
   }
 }
 

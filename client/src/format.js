@@ -33,4 +33,18 @@ export function formatDate(isoDate) {
   })
 }
 
-export const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
+// The hotel's own wall-clock time, sent by the server as 'YYYY-MM-DDTHH:MM' (already in the
+// hotel's zone). We only re-arrange the text: turning it into a Date would shift it into the
+// VIEWER's time zone, and "cancel by 14:00" must mean 14:00 at the hotel.
+// '2027-09-03T14:00' -> 'Fri 3 Sep, 14:00'
+export function formatHotelTime(local) {
+  const [date, time] = local.split('T')
+  return `${formatDate(date)}, ${time}`
+}
+
+// An exact moment (ISO string from the server) in the VIEWER's own time zone, e.g. for "cancelled at".
+export function formatMoment(iso) {
+  return new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+export const plural =(n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
