@@ -56,4 +56,20 @@ function quoteStay(nightPricesPaise) {
   };
 }
 
-module.exports = { taxForNight, quoteStay, TAX_THRESHOLD_PAISE };
+// How much of a booking's FROZEN price comes back when it is cancelled.
+//   non_refundable ............... nothing
+//   flexible, before the deadline .. everything (room + tax)
+//   flexible, after the deadline ... everything except the FIRST night (its room price and its tax)
+// rate: the price_breakdown saved on the booking, never a fresh quote (prices may have changed since).
+function refundFor(rate, ratePlan, beforeDeadline) {
+  if (ratePlan === 'non_refundable') return 0;
+  if (ratePlan !== 'flexible') throw new TypeError(`unknown rate plan ${JSON.stringify(ratePlan)}`);
+  if (!rate || !Array.isArray(rate.nights) || rate.nights.length === 0) throw new TypeError('rate has no nights');
+  const total = rate.totalPaise;
+  if (!Number.isSafeInteger(total) || total <= 0) throw new TypeError(`bad totalPaise ${JSON.stringify(total)}`);
+  if (beforeDeadline) return total;
+  const first = rate.nights[0];
+  return total - first.pricePaise - first.taxPaise;
+}
+
+module.exports = { taxForNight, quoteStay, refundFor, TAX_THRESHOLD_PAISE };

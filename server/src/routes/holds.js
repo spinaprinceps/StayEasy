@@ -1,12 +1,14 @@
 // POST /holds      (login)  header Idempotency-Key, body { roomTypeId, checkIn, checkOut, guests, ratePlan }
 //                  -> 201 hold | 400 bad input | 404 no such room type | 409 no room | 422 key reused
 // GET  /holds/:id  (login)  -> 200 hold (your own only) | 404
+// POST /holds/:id/pay (login) -> 200 { paymentId, checkoutUrl } (see below)
 const express = require('express');
 const { z } = require('zod');
 const pool = require('../db/pool');
 const { requireAuth } = require('../auth');
 const { parseStayQuery } = require('../search/validate');
 const { createHold, findHoldById, toHoldView } = require('../holds/createHold');
+const { startPayment } = require('../payments/startPayment');
 
 const router = express.Router();
 router.use(requireAuth); // every hold route needs a logged-in traveller
@@ -42,6 +44,16 @@ router.post('/', async (req, res) => {
     req: { ...stay.stay, ...extras.data },
   });
   res.status(out.status).set(out.headers).json(out.body);
+});
+
+// POST /holds/:id/pay -> 200 { paymentId, checkoutUrl } | 404 | 409 expired/already paid | 503 gateway down
+// No Idempotency-Key needed: the hold itself is the scope. While a payment is open, every
+// click gets the same checkout page back (see payments/startPayment.js).
+router.post('/:id/pay', async (req, res) => {
+  const id = Id.safeParse(req.params.id);
+  if (!id.success) return res.status(404).json({ error: 'Hold not found' });
+  const out = await startPayment(pool, { userId: req.userId, holdId: id.data });
+  res.status(out.status).json(out.body);
 });
 
 router.get('/:id', async (req, res) => {

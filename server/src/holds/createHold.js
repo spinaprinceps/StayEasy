@@ -37,10 +37,17 @@ SELECT h.id, h.user_id, h.request_hash, h.status, h.expires_at, h.room_type_id,
        rt.name  AS room_name,
        ho.id    AS hotel_id,
        ho.name  AS hotel_name,
-       greatest(0, ceil(extract(epoch FROM h.expires_at - now())))::int AS seconds_left
+       greatest(0, ceil(extract(epoch FROM h.expires_at - now())))::int AS seconds_left,
+       bk.id AS booking_id,
+       lp.status AS payment_status, lp.failure_reason AS payment_failure
 FROM holds h
 JOIN room_types rt ON rt.id = h.room_type_id
-JOIN hotels ho     ON ho.id = rt.hotel_id`;
+JOIN hotels ho     ON ho.id = rt.hotel_id
+LEFT JOIN bookings bk ON bk.hold_id = h.id
+-- the latest payment attempt, if any (a declined card, then a retry = two attempts)
+LEFT JOIN LATERAL (
+  SELECT status, failure_reason FROM payments WHERE hold_id = h.id ORDER BY id DESC LIMIT 1
+) lp ON true`;
 
 function toHoldView(row) {
   return {
@@ -57,6 +64,8 @@ function toHoldView(row) {
     guests: row.guests,
     ratePlan: row.rate_plan,
     price: row.price_breakdown,
+    payment: row.payment_status ? { status: row.payment_status, failureReason: row.payment_failure } : null,
+    bookingId: row.booking_id ?? null,
   };
 }
 

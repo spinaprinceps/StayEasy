@@ -4,8 +4,12 @@ const searchRouter = require('./routes/search');
 const authRouter = require('./routes/auth');
 const hotelsRouter = require('./routes/hotels');
 const holdsRouter = require('./routes/holds');
+const bookingsRouter = require('./routes/bookings');
+const paymentsRouter = require('./routes/payments');
 
 const app = express();
+// The webhook needs the RAW body to check its signature, so it goes BEFORE the JSON parser.
+app.use('/payments', paymentsRouter);
 app.use(express.json());
 
 app.get('/health', async (req, res) => {
@@ -21,6 +25,7 @@ app.use('/search', searchRouter);
 app.use('/auth', authRouter);
 app.use('/hotels', hotelsRouter);
 app.use('/holds', holdsRouter);
+app.use('/bookings', bookingsRouter);
 
 // Last stop for any error a route didn't handle (Express 5 forwards async errors here).
 // Log the details for us; never send stack traces or SQL to the user.

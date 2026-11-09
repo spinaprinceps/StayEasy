@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon --env-file=../.env src/index.js",
+    "fakepay": "node --env-file=../.env src/fakepay/server.js",
     "worker": "node --env-file=../.env src/worker.js",
     "migrate": "node --env-file=../.env db/migrate.js",
     "seed": "node --env-file=../.env db/seed/load-csv.js",
