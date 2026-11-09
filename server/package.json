@@ -9,7 +9,9 @@
     "migrate": "node --env-file=../.env db/migrate.js",
     "seed": "node --env-file=../.env db/seed/load-csv.js",
     "gen": "node db/seed/generate-data.js",
-    "test": "node --test"
+    "test": "node --test \"test/*.test.js\"",
+
+    "test:db": "node --env-file=../.env --test --test-concurrency=1 \"test-db/*.test.js\""
   },
   "keywords": [],
   "author": "",

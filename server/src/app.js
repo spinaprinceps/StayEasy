@@ -3,6 +3,7 @@ const pool = require('./db/pool');
 const searchRouter = require('./routes/search');
 const authRouter = require('./routes/auth');
 const hotelsRouter = require('./routes/hotels');
+const holdsRouter = require('./routes/holds');
 
 const app = express();
 app.use(express.json());
@@ -19,6 +20,7 @@ app.get('/health', async (req, res) => {
 app.use('/search', searchRouter);
 app.use('/auth', authRouter);
 app.use('/hotels', hotelsRouter);
+app.use('/holds', holdsRouter);
 
 // Last stop for any error a route didn't handle (Express 5 forwards async errors here).
 // Log the details for us; never send stack traces or SQL to the user.

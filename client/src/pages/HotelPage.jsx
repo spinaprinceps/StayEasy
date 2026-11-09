@@ -1,9 +1,10 @@
 // /hotels/:id?checkIn=...&checkOut=...&guests=2
 // The hotel and every room type, with why a room can't be booked when it can't.
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import StayForm from '../components/StayForm'
 import PriceBreakdown from '../components/PriceBreakdown'
-import { toQuery } from '../api'
+import { apiFetch, toQuery } from '../api'
 import { useApi } from '../useApi'
 import { useAuth } from '../auth'
 import { addDays, formatDate, formatPaise, localToday, plural } from '../format'
@@ -65,7 +66,8 @@ export default function HotelPage() {
             Rooms for {formatDate(data.stay.checkIn)} – {formatDate(data.stay.checkOut)}
             <span className="muted"> · {plural(data.stay.nights, 'night')}, {plural(data.stay.guests, 'guest')}</span>
           </h2>
-          <ul className="room-list">
+          {/* key: new dates/guests -> fresh components -> fresh Idempotency-Keys (see Rate) */}
+          <ul className="room-list" key={toQuery(data.stay)}>
             {data.roomTypes.map((rt) => (
               <RoomType key={rt.id} rt={rt} stay={data.stay} />
             ))}
@@ -90,26 +92,56 @@ function RoomType({ rt, stay }) {
 
       {available && (
         <div className="rates">
-          <Rate title="Flexible" note="Free cancellation before the deadline" rate={rt.price.flexible} checkIn={stay.checkIn} />
-          <Rate title="Non-refundable" note="12% cheaper, no refund if you cancel" rate={rt.price.nonRefundable} checkIn={stay.checkIn} />
+          <Rate title="Flexible" note="Free cancellation before the deadline" rate={rt.price.flexible}
+            stay={stay} roomTypeId={rt.id} ratePlan="flexible" />
+          <Rate title="Non-refundable" note="12% cheaper, no refund if you cancel" rate={rt.price.nonRefundable}
+            stay={stay} roomTypeId={rt.id} ratePlan="non_refundable" />
         </div>
       )}
     </li>
   )
 }
 
-function Rate({ title, note, rate, checkIn }) {
+function Rate({ title, note, rate, stay, roomTypeId, ratePlan }) {
   const { user } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  // ONE key per "I want this room, these dates, this rate", made once when this box appears.
+  // A double-click, or clicking again after a network error, re-sends the SAME key, so the
+  // server returns the same hold instead of taking a second room.
+  const [idempotencyKey] = useState(() => crypto.randomUUID())
+
+  const reserve = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const hold = await apiFetch('/holds', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': idempotencyKey },
+        body: { roomTypeId, checkIn: stay.checkIn, checkOut: stay.checkOut, guests: stay.guests, ratePlan },
+      })
+      navigate(`/holds/${hold.holdId}`)
+    } catch (err) {
+      setError(err)
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="rate">
       <h4>{title}</h4>
       <p className="muted small">{note}</p>
       <p className="price">{formatPaise(rate.totalPaise)}</p>
       <p className="muted small">incl. {formatPaise(rate.taxPaise)} tax</p>
-      <PriceBreakdown rate={rate} checkIn={checkIn} />
+      <PriceBreakdown rate={rate} checkIn={stay.checkIn} />
+      {/* The page showed "available" a moment ago, but only the server's answer counts:
+          a 409 here is the "someone else got the last room" case, said plainly. */}
+      {error && <p className="notice error small">{error.message}</p>}
       {user
-        ? <button className="primary" disabled title="Reserve is feature 4">Reserve (coming soon)</button>
+        ? <button className="primary" onClick={reserve} disabled={busy}>{busy ? 'Reserving…' : 'Reserve'}</button>
         : <Link className="button" to="/login" state={{ from: location }}>Log in to reserve</Link>}
     </div>
   )

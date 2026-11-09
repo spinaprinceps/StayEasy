@@ -68,6 +68,10 @@ main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
 .breakdown th:first-child, .breakdown td:first-child { text-align: left; }
 .breakdown .grand td { font-weight: 700; border-bottom: none; }
 
+/* Hold page */
+.hold { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.5rem; }
+.hold .notice { margin-bottom: 0.5rem; }
+
 /* Login / sign up */
 .auth-card { max-width: 420px; margin: 2rem auto; }
 .auth-card form { display: grid; gap: 0.8rem; margin-bottom: 0.8rem; }

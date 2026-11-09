@@ -4,6 +4,7 @@ import { useAuth } from './auth'
 import SearchPage from './pages/SearchPage'
 import HotelPage from './pages/HotelPage'
 import AuthPage from './pages/AuthPage'
+import HoldPage from './pages/HoldPage'
 import './App.css'
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<SearchPage />} />
           <Route path="/hotels/:id" element={<HotelPage />} />
+          <Route path="/holds/:id" element={<HoldPage />} />
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/signup" element={<AuthPage mode="signup" />} />
           <Route path="*" element={<p className="notice">Page not found. <Link to="/">Go to search</Link></p>} />

@@ -24,8 +24,8 @@ export function setAuth(token, handleUnauthorized) {
   onUnauthorized = handleUnauthorized;
 }
 
-export async function apiFetch(path, { method = 'GET', body, signal } = {}) {
-  const headers = {};
+export async function apiFetch(path, { method = 'GET', body, signal, headers: extraHeaders = {} } = {}) {
+  const headers = { ...extraHeaders };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (currentToken) headers.Authorization = `Bearer ${currentToken}`;
 
